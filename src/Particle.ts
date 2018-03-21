@@ -13,17 +13,24 @@ class Particle {
     target: vec3;
     repel: boolean;
 
+    targets: vec3[];
+
     maxVel: number = 10;
     
     constructor(pos: vec3, vel: vec3, acc: vec3) {
         this.pos = pos;
         this.vel = vel;
         this.acc = acc;
+        this.targets = [];
     }
 
     setTarget(target: vec3, repel: boolean) {
         this.target = target;
         this.repel = repel;
+    }
+    
+    addTarget(target:vec3) {
+        this.targets.push(target);
     }
     
     updateForces(time: number) {

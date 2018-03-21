@@ -4,9 +4,10 @@ import * as DAT from 'dat-gui';
 import Square from './geometry/Square';
 import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
-import {setGL} from './globals';
+import {setGL, readTextFile} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 import Particle from './Particle';
+import Mesh from './geometry/Mesh';
 
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
@@ -19,9 +20,25 @@ const controls = {
 let square: Square;
 let time: number = 0.0;
 let particles: Particle[];
-let n: number = 20.0;
 let t: Date;
 let deltaTime: number;
+
+let obj0: string;
+let mesh0: Mesh;
+
+let obj1: string;
+let mesh1: Mesh;
+
+let obj2: string;
+let mesh2: Mesh;
+
+const n: number = 100.0;
+
+function loadOBJText() {
+  obj0 = readTextFile('../resources/obj/wahoo.obj');
+  obj1 = readTextFile('../resources/obj/bunny1.obj');
+  obj2 = readTextFile('../resources/obj/Toilet.obj');
+}
 
 function loadScene() {
   square = new Square();
@@ -36,6 +53,30 @@ function loadScene() {
           vec3.create(), vec3.create()));    
       }
   }
+  loadOBJText();
+  mesh0 = new Mesh(obj0, vec3.fromValues(0, -8, -10));
+  mesh0.create();
+  // for (let i = 0; i < mesh0.positionArray.length; i+=3) {
+  //   let pos = mesh0.positionArray[i];
+  //   particles.push(new Particle(pos,
+  //   vec3.create(), vec3.create()));   
+  // }
+
+  for (let i = 0; i < particles.length; i++) {
+    
+  }
+
+  mesh1 = new Mesh(obj1, vec3.fromValues(0,0,0));
+  mesh1.create();
+
+  mesh2 = new Mesh(obj2, vec3.fromValues(0,0,-50));
+  mesh2.create();
+  // for (let i = 0; i < mesh2.positionArray.length; i++) {
+  //   let pos = mesh2.positionArray[i];
+  //   particles.push(new Particle(pos,
+  //   vec3.create(), vec3.create()));
+  // }
+
 }
 
 // Update particles positions, velocities and resets instance VBOs
@@ -49,8 +90,9 @@ function computeParticles() {
     offsetsArray.push(pos[1]);
     offsetsArray.push(pos[2]);
 
-    colorsArray.push(pos[0] / n);
-    colorsArray.push(pos[1] / n);
+    let speed = vec3.length(particles[i].vel);
+    colorsArray.push(speed / n);
+    colorsArray.push(1 - speed / n );
     colorsArray.push(1.0);
     colorsArray.push(1.0); // Alpha channel
   }
@@ -86,7 +128,7 @@ function main() {
   // Initial call to load scene
   loadScene();
 
-  const camera = new Camera(vec3.fromValues(20, 20, 40), vec3.fromValues(20, 20, 0));
+  const camera = new Camera(vec3.fromValues(0, 0, -100), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0.2, 0.2, 0.2, 1);

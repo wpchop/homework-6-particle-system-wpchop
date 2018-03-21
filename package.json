@@ -12,7 +12,8 @@
     "typescript": "^2.6.2",
     "webpack": "^3.10.0",
     "webpack-dev-server": "^2.10.1",
-    "webpack-glsl-loader": "^1.0.1"
+    "webpack-glsl-loader": "^1.0.1",
+    "webgl-obj-loader": "^1.0.0"
   },
   "dependencies": {
     "3d-view-controls": "^2.2.0",
