@@ -13,6 +13,7 @@ import Particle from './Particle';
 const controls = {
   tesselations: 5,
   'Load Scene': loadScene, // A function pointer, essentially
+  repel: false,
 };
 
 let square: Square;
@@ -31,15 +32,13 @@ function loadScene() {
   // Setting up particles
   for(let i = 0; i < n; i++) {
     for(let j = 0; j < n; j++) {
-      // particles.push(new Particle(vec3.fromValues(i,j,0),
-      //     vec3.fromValues(0,1,0), vec3.fromValues(0,0,0)));
-
           particles.push(new Particle(vec3.fromValues(i,j,0),
           vec3.create(), vec3.create()));    
       }
   }
 }
 
+// Update particles positions, velocities and resets instance VBOs
 function computeParticles() {
   let offsetsArray = [];
   let colorsArray = [];
@@ -72,6 +71,7 @@ function main() {
 
   // Add controls to the gui
   const gui = new DAT.GUI();
+  gui.add(controls, 'repel');
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -86,7 +86,7 @@ function main() {
   // Initial call to load scene
   loadScene();
 
-  const camera = new Camera(vec3.fromValues(50, 50, 10), vec3.fromValues(50, 50, 0));
+  const camera = new Camera(vec3.fromValues(20, 20, 40), vec3.fromValues(20, 20, 0));
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0.2, 0.2, 0.2, 1);
@@ -101,7 +101,7 @@ function main() {
   // This function will be called every frame
   function tick() {
     let newTime = new Date();
-    deltaTime = (newTime.getTime() - t.getTime()) / 100;
+    deltaTime = (newTime.getTime() - t.getTime()) / 500;
     t = newTime;
 
     computeParticles();
@@ -120,22 +120,21 @@ function main() {
     requestAnimationFrame(tick);
   }
 
-  window.addEventListener('resize', function() {
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    camera.setAspectRatio(window.innerWidth / window.innerHeight);
-    camera.updateProjectionMatrix();
-  }, false);
+  function setSingleParticleTarget(p: vec3, part: Particle) {
+    part.setTarget(p, true);
+  }
 
-  window.addEventListener('mousedown', function(event) {
-    // computeParticles();
-    let x = event.clientX;
-    let y = event.clientY;
+  // Sets all particles' targets to p
+  function setParticleTargets(p: vec3, repel: boolean) {
+    for (let i = 0; i < particles.length; i++) {
+      particles[i].setTarget(p, repel);
+    }
+  }
 
+  // Returns a world space point based on pixelspace x and y
+  function rayCast(x: number, y: number) {
     let sx = 2 * x / screen.width - 1;
     let sy = 1  - (2 * y / screen.height);
-
-    // console.log("sx: ", sx);
-    // console.log("sy: ", sy);
 
     let look: vec3 = camera.target;
     vec3.subtract(look, look, camera.position);
@@ -148,12 +147,24 @@ function main() {
     let H = vec3.create();
     vec3.scale(H, camera.right, len * camera.aspectRatio * tana);
 
+    // Point in world space
     let p = vec3.create();
     vec3.scale(H, H, sx);
     vec3.scale(V, V, sy);
     vec3.add(p, camera.target, H);
     vec3.add(p, p, V);
-    console.log("hello: ", p);
+    return p;
+  }
+
+  window.addEventListener('resize', function() {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.setAspectRatio(window.innerWidth / window.innerHeight);
+    camera.updateProjectionMatrix();
+  }, false);
+
+  window.addEventListener('mousedown', function(event) {
+    let p = rayCast(event.clientX, event.clientY);
+    setParticleTargets(p, controls.repel);
   });
 
   renderer.setSize(window.innerWidth, window.innerHeight);
