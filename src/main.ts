@@ -6,6 +6,7 @@ import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
 import {setGL} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
+import Particle from './Particle';
 
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
@@ -16,31 +17,48 @@ const controls = {
 
 let square: Square;
 let time: number = 0.0;
+let particles: Particle[];
+let n: number = 20.0;
+let t: Date;
+let deltaTime: number;
 
 function loadScene() {
   square = new Square();
   square.create();
+  particles = [];
+  t = new Date();
 
-  // Set up particles here. Hard-coded example data for now
-  let offsetsArray = [];
-  let colorsArray = [];
-  let n: number = 100.0;
+  // Setting up particles
   for(let i = 0; i < n; i++) {
     for(let j = 0; j < n; j++) {
-      offsetsArray.push(i);
-      offsetsArray.push(j);
-      offsetsArray.push(0);
+      // particles.push(new Particle(vec3.fromValues(i,j,0),
+      //     vec3.fromValues(0,1,0), vec3.fromValues(0,0,0)));
 
-      colorsArray.push(i / n);
-      colorsArray.push(j / n);
-      colorsArray.push(1.0);
-      colorsArray.push(1.0); // Alpha channel
-    }
+          particles.push(new Particle(vec3.fromValues(i,j,0),
+          vec3.create(), vec3.create()));    
+      }
+  }
+}
+
+function computeParticles() {
+  let offsetsArray = [];
+  let colorsArray = [];
+  for (let i = 0; i < particles.length; i++) {
+    particles[i].updateForces(deltaTime);
+    let pos = particles[i].pos;
+    offsetsArray.push(pos[0]);
+    offsetsArray.push(pos[1]);
+    offsetsArray.push(pos[2]);
+
+    colorsArray.push(pos[0] / n);
+    colorsArray.push(pos[1] / n);
+    colorsArray.push(1.0);
+    colorsArray.push(1.0); // Alpha channel
   }
   let offsets: Float32Array = new Float32Array(offsetsArray);
   let colors: Float32Array = new Float32Array(colorsArray);
   square.setInstanceVBOs(offsets, colors);
-  square.setNumInstances(n * n); // 10x10 grid of "particles"
+  square.setNumInstances(particles.length); // 10x10 grid of "particles"
 }
 
 function main() {
@@ -82,6 +100,12 @@ function main() {
 
   // This function will be called every frame
   function tick() {
+    let newTime = new Date();
+    deltaTime = (newTime.getTime() - t.getTime()) / 100;
+    t = newTime;
+
+    computeParticles();
+
     camera.update();
     stats.begin();
     lambert.setTime(time++);
@@ -101,6 +125,36 @@ function main() {
     camera.setAspectRatio(window.innerWidth / window.innerHeight);
     camera.updateProjectionMatrix();
   }, false);
+
+  window.addEventListener('mousedown', function(event) {
+    // computeParticles();
+    let x = event.clientX;
+    let y = event.clientY;
+
+    let sx = 2 * x / screen.width - 1;
+    let sy = 1  - (2 * y / screen.height);
+
+    // console.log("sx: ", sx);
+    // console.log("sy: ", sy);
+
+    let look: vec3 = camera.target;
+    vec3.subtract(look, look, camera.position);
+    let len = vec3.length(look);
+    let tana = Math.tan(camera.fovy / 2);
+
+    let V = vec3.create();
+    vec3.scale(V, camera.up, len * tana);
+    
+    let H = vec3.create();
+    vec3.scale(H, camera.right, len * camera.aspectRatio * tana);
+
+    let p = vec3.create();
+    vec3.scale(H, H, sx);
+    vec3.scale(V, V, sy);
+    vec3.add(p, camera.target, H);
+    vec3.add(p, p, V);
+    console.log("hello: ", p);
+  });
 
   renderer.setSize(window.innerWidth, window.innerHeight);
   camera.setAspectRatio(window.innerWidth / window.innerHeight);
