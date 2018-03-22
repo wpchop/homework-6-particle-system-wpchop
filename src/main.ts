@@ -15,6 +15,7 @@ const controls = {
   tesselations: 5,
   'Load Scene': loadScene, // A function pointer, essentially
   repel: false,
+  mesh: 'none',
 };
 
 let square: Square;
@@ -22,6 +23,8 @@ let time: number = 0.0;
 let particles: Particle[];
 let t: Date;
 let deltaTime: number;
+
+let mesh: String;
 
 let obj0: string;
 let mesh0: Mesh;
@@ -32,7 +35,7 @@ let mesh1: Mesh;
 let obj2: string;
 let mesh2: Mesh;
 
-const n: number = 100.0;
+const n: number = 60.0;
 
 function loadOBJText() {
   obj0 = readTextFile('../resources/obj/wahoo.obj');
@@ -49,34 +52,36 @@ function loadScene() {
   // Setting up particles
   for(let i = 0; i < n; i++) {
     for(let j = 0; j < n; j++) {
-          particles.push(new Particle(vec3.fromValues(i,j,0),
+          particles.push(new Particle(vec3.fromValues((i - n/2),(j - n/2),-10),
           vec3.create(), vec3.create()));    
       }
   }
   loadOBJText();
   mesh0 = new Mesh(obj0, vec3.fromValues(0, -8, -10));
   mesh0.create();
-  // for (let i = 0; i < mesh0.positionArray.length; i+=3) {
-  //   let pos = mesh0.positionArray[i];
-  //   particles.push(new Particle(pos,
-  //   vec3.create(), vec3.create()));   
-  // }
-
-  for (let i = 0; i < particles.length; i++) {
-    
-  }
 
   mesh1 = new Mesh(obj1, vec3.fromValues(0,0,0));
   mesh1.create();
 
   mesh2 = new Mesh(obj2, vec3.fromValues(0,0,-50));
   mesh2.create();
-  // for (let i = 0; i < mesh2.positionArray.length; i++) {
-  //   let pos = mesh2.positionArray[i];
-  //   particles.push(new Particle(pos,
-  //   vec3.create(), vec3.create()));
-  // }
 
+  addMeshPoints(mesh0);
+  addMeshPoints(mesh1);
+  addMeshPoints(mesh2);
+}
+
+function addMeshPoints(mesh: Mesh) {
+  let n = particles.length;
+  let m = mesh.positionArray.length;
+  let partIdx = 0;
+
+  while (partIdx < n) {
+    let i = Math.floor(Math.random() * m);
+    particles[partIdx].addTarget( mesh.positionArray[i]);
+    // particles[partIdx].pos = mesh.positionArray[i];
+    partIdx++;
+  }
 }
 
 // Update particles positions, velocities and resets instance VBOs
@@ -89,17 +94,17 @@ function computeParticles() {
     offsetsArray.push(pos[0]);
     offsetsArray.push(pos[1]);
     offsetsArray.push(pos[2]);
-
-    let speed = vec3.length(particles[i].vel);
-    colorsArray.push(speed / n);
-    colorsArray.push(1 - speed / n );
-    colorsArray.push(1.0);
+    
+    let speed = vec3.length(particles[i].vel) / 4;
+    colorsArray.push(speed * 0.75 + 0.25);
+    colorsArray.push(speed *0.7);
+    colorsArray.push(speed * 0.25 + 0.75);
     colorsArray.push(1.0); // Alpha channel
   }
   let offsets: Float32Array = new Float32Array(offsetsArray);
   let colors: Float32Array = new Float32Array(colorsArray);
   square.setInstanceVBOs(offsets, colors);
-  square.setNumInstances(particles.length); // 10x10 grid of "particles"
+  square.setNumInstances(particles.length);
 }
 
 function main() {
@@ -114,6 +119,9 @@ function main() {
   // Add controls to the gui
   const gui = new DAT.GUI();
   gui.add(controls, 'repel');
+  gui.add(controls, 'mesh', ['none', 'wahoo', 'bunny', 'toilet']);
+
+  mesh = controls.mesh;
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -142,6 +150,19 @@ function main() {
 
   // This function will be called every frame
   function tick() {
+    if (controls.mesh != mesh) {
+      mesh = controls.mesh;
+      if (mesh == "wahoo") {
+        setTargetAsMesh(0);
+      } else if (mesh == "bunny") {
+        setTargetAsMesh(1);
+      } else if (mesh == "toilet") {
+        setTargetAsMesh(2);
+      } else {
+
+      }
+    }
+
     let newTime = new Date();
     deltaTime = (newTime.getTime() - t.getTime()) / 500;
     t = newTime;
@@ -162,8 +183,12 @@ function main() {
     requestAnimationFrame(tick);
   }
 
-  function setSingleParticleTarget(p: vec3, part: Particle) {
-    part.setTarget(p, true);
+  // Sets all particles target to a position corresponding to
+  // the mesh at index in their targets array
+  function setTargetAsMesh(index: number) {
+    for (let i = 0; i < particles.length; i++) {
+      particles[i].setMeshTarget(index);
+    }
   }
 
   // Sets all particles' targets to p
@@ -205,8 +230,11 @@ function main() {
   }, false);
 
   window.addEventListener('mousedown', function(event) {
+    if (mesh == "none") {
     let p = rayCast(event.clientX, event.clientY);
     setParticleTargets(p, controls.repel);
+    }
+
   });
 
   renderer.setSize(window.innerWidth, window.innerHeight);

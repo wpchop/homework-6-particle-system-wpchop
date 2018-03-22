@@ -15,7 +15,7 @@ class Particle {
 
     targets: vec3[];
 
-    maxVel: number = 10;
+    maxVel: number = 3;
     
     constructor(pos: vec3, vel: vec3, acc: vec3) {
         this.pos = pos;
@@ -32,14 +32,26 @@ class Particle {
     addTarget(target:vec3) {
         this.targets.push(target);
     }
+
+    setMeshTarget(idx: number) {
+        this.target = this.targets[idx];
+    }
     
     updateForces(time: number) {
         if (this.target !== undefined) {
             let accDirection = vec3.create();
             vec3.subtract(accDirection, this.target, this.pos);
+            vec3.scale(this.acc, this.acc, 0.1);
             this.acc = accDirection;
             if (this.repel) {
                 vec3.negate(this.acc, this.acc);
+            }
+            let distToTarget =  vec3.distance(this.target, this.pos);
+            if ( distToTarget < 1) {
+                vec3.normalize(this.vel, this.vel);
+                if (distToTarget < 0.2) {
+                    vec3.scale(this.vel, this.vel, 0.5);
+                }
             }
         }
 
