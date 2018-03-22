@@ -38,9 +38,9 @@ let mesh2: Mesh;
 const n: number = 60.0;
 
 function loadOBJText() {
-  obj0 = readTextFile('../resources/obj/wahoo.obj');
-  obj1 = readTextFile('../resources/obj/bunny1.obj');
-  obj2 = readTextFile('../resources/obj/Toilet.obj');
+  obj0 = readTextFile('https://raw.githubusercontent.com/CIS-566-2018/homework-6-particle-system-wpchop/9d091d94195790ce9e426b551dd3024939d9a218/resources/obj/wahoo.obj');
+  obj1 = readTextFile('https://raw.githubusercontent.com/wpchop/homework-6-particle-system-wpchop/master/resources/obj/bunny1.obj');
+  obj2 = readTextFile('https://raw.githubusercontent.com/wpchop/homework-6-particle-system-wpchop/master/resources/obj/Toilet.obj');
 }
 
 function loadScene() {
