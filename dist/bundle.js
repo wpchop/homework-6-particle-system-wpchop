@@ -3359,9 +3359,9 @@ let obj2;
 let mesh2;
 const n = 60.0;
 function loadOBJText() {
-    obj0 = Object(__WEBPACK_IMPORTED_MODULE_6__globals__["b" /* readTextFile */])('../resources/obj/wahoo.obj');
-    obj1 = Object(__WEBPACK_IMPORTED_MODULE_6__globals__["b" /* readTextFile */])('../resources/obj/bunny1.obj');
-    obj2 = Object(__WEBPACK_IMPORTED_MODULE_6__globals__["b" /* readTextFile */])('../resources/obj/Toilet.obj');
+    obj0 = Object(__WEBPACK_IMPORTED_MODULE_6__globals__["b" /* readTextFile */])('https://raw.githubusercontent.com/CIS-566-2018/homework-6-particle-system-wpchop/9d091d94195790ce9e426b551dd3024939d9a218/resources/obj/wahoo.obj');
+    obj1 = Object(__WEBPACK_IMPORTED_MODULE_6__globals__["b" /* readTextFile */])('https://raw.githubusercontent.com/wpchop/homework-6-particle-system-wpchop/master/resources/obj/bunny1.obj');
+    obj2 = Object(__WEBPACK_IMPORTED_MODULE_6__globals__["b" /* readTextFile */])('https://raw.githubusercontent.com/wpchop/homework-6-particle-system-wpchop/master/resources/obj/Toilet.obj');
 }
 function loadScene() {
     square = new __WEBPACK_IMPORTED_MODULE_3__geometry_Square__["a" /* default */]();
